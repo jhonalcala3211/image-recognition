@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image Recognition</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 350px;
+    }
+    h2 {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+    input[type="file"] {
+      margin: 1rem 0;
+      padding: 0.5rem;
+    }
+    img {
+      margin-top: 1rem;
+      max-width: 100%;
+      border-radius: 0.5rem;
+      border: 1px solid #ddd;
+    }
+    #result {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #4f46e5;
+      white-space: pre-line; /* allows line breaks for multiple predictions */
+    }
+    .loading {
+      color: #555;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🖼️ AI Image Recognition</h2>
+    <input type="file" accept="image/*" onchange="loadImage(event)">
+    <br>
+    <img id="inputImage" style="display:none;" />
+    <p id="result">Upload an image to start...</p>
+    <p id="loading" class="loading" style="display:none;">Analyzing...</p>
+  </div>
+
+  <script>
+    let model;
+
+    // Load MobileNet model
+    async function loadModel() {
+      document.getElementById("loading").style.display = "block";
+      model = await mobilenet.load();
+      document.getElementById("loading").style.display = "none";
+      console.log("Model loaded!");
+    }
+    loadModel();
+
+    // Load image from file input
+    function loadImage(event) {
+      const image = document.getElementById("inputImage");
+      image.src = URL.createObjectURL(event.target.files[0]);
+      image.style.display = "block";
+      image.onload = () => predictImage(image);
+    }
+
+    // Predict what's in the image (Top 3 predictions)
+    async function predictImage(image) {
+      if (!model) return;
+
+      const loadingEl = document.getElementById("loading");
+      const resultEl = document.getElementById("result");
+
+      loadingEl.style.display = "block";
+      resultEl.innerText = "";
+
+      try {
+        const predictions = await model.classify(image);
+
+        loadingEl.style.display = "none";
+
+        // Show top 3 predictions
+        const topPredictions = predictions.slice(0, 3)
+          .map(p => `${p.className} — ${(p.probability * 100).toFixed(2)}%`)
+          .join("\n");
+
+        resultEl.innerText = topPredictions;
+      } catch (error) {
+        loadingEl.style.display = "none";
+        resultEl.innerText = "Error analyzing image.";
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
