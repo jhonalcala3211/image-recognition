@@ -1,2 +1,2 @@
 # image-recognition
-This is only a test AI Image Recognition
+This is a TEST Image Recognition
